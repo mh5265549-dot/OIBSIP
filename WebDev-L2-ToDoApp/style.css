@@ -1,0 +1,247 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+}
+
+.todo-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 6px;
+    font-size: 26px;
+    text-align: center;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.input-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.input-section input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-section input:focus {
+    border-color: #0066cc;
+}
+
+.input-section button {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.input-section button:hover {
+    background-color: #0052a3;
+}
+
+.lists-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .lists-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+.task-column {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    min-height: 250px;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.column-header h2 {
+    font-size: 16px;
+    color: #333;
+}
+
+.badge {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.completed-badge {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.task-item {
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 4px solid #0066cc;
+    transition: transform 0.1s;
+}
+
+.task-item.completed {
+    border-left-color: #10b981;
+    background: #f9fafb;
+}
+
+.task-content-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-text {
+    font-size: 14px;
+    color: #333;
+    word-break: break-word;
+    flex: 1;
+}
+
+.completed .task-text {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+.task-timestamp {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.task-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.task-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-complete {
+    background: #d1fae5;
+    color: #065f46;
+}
+.btn-complete:hover { background: #a7f3d0; }
+
+.btn-edit {
+    background: #fef3c7;
+    color: #b45309;
+}
+.btn-edit:hover { background: #fde68a; }
+
+.btn-delete {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+.btn-delete:hover { background: #fecaca; }
+
+.empty-msg {
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+    margin: auto;
+    font-style: italic;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Automated Corner Banner */
+.watermark-banner {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(20, 20, 20, 0.85);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: monospace;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    pointer-events: none;
+}
+
+.banner-name {
+    display: block;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.banner-task, .banner-sub {
+    display: block;
+    font-size: 10px;
+    color: #bbb;
+}
