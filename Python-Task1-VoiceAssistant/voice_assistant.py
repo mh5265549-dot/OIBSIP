@@ -10,6 +10,15 @@ engine = pyttsx3.init()
 engine.setProperty('rate', 175)  # Speeding up or slowing down speech
 engine.setProperty('volume', 1.0) # Volume level from 0.0 to 1.0
 
+def print_banner():
+    """Prints internship title card info for video recording (first 2 seconds)."""
+    print("=" * 65)
+    print("  INTERNSHIP SUBMISSION: OASIS INFOBYTE")
+    print("  Name: Hashir Shoaib")
+    print("  Track: Python Programming")
+    print("  Task Title: Task 1 - Advanced Voice Assistant")
+    print("=" * 65 + "\n")
+
 def speak(text):
     """Converts text string into spoken audio feedback."""
     print(f"Assistant: {text}")
@@ -83,6 +92,7 @@ def get_weather(city="London"):
 
 def run_assistant():
     """Main execution loop for the voice assistant."""
+    print_banner()
     speak("Hello! I am your advanced virtual assistant. How can I help you today?")
     
     while True:
