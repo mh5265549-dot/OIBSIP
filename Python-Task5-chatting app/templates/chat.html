@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Oasis Chat — {{ username }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body class="chat-body">
+
+  <!-- ── Top Navigation ─────────────────────────────────────────── -->
+  <header class="chat-header">
+    <div class="header-left">
+      <span class="logo-icon-sm">💬</span>
+      <span class="app-title">Oasis Chat</span>
+      <span class="header-badge">Task 5 — Hashir Shoaib</span>
+    </div>
+    <div class="header-right">
+      <span class="user-tag">👤 {{ username }}</span>
+      <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+  </header>
+
+  <!-- ── Main Layout ────────────────────────────────────────────── -->
+  <div class="chat-layout">
+
+    <!-- ── Sidebar: Rooms ────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>💬 Chat Rooms</h3>
+      </div>
+
+      <ul class="room-list" id="room-list">
+        {% for room in rooms %}
+          <li class="room-item" data-room="{{ room.name }}" onclick="switchRoom('{{ room.name }}')">
+            <span class="room-hash">#</span> {{ room.name }}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="create-room-panel">
+        <p class="create-room-label">Create New Room</p>
+        <div class="create-room-row">
+          <input type="text" id="new-room-input" placeholder="Room name…" maxlength="30"/>
+          <button onclick="createRoom()" class="btn-create">+</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Chat Area ──────────────────────────────────────────────── -->
+    <main class="chat-main">
+
+      <!-- Room Title -->
+      <div class="room-header">
+        <span id="current-room-title"># General</span>
+        <span id="online-count" class="online-badge">● Online</span>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages-container" id="messages-container">
+        <div class="chat-welcome" id="chat-welcome">
+          <div class="welcome-icon">👋</div>
+          <p>Welcome to <strong id="welcome-room-name">General</strong>!</p>
+          <p class="welcome-sub">Messages will appear here.</p>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator" id="typing-indicator" style="display:none;">
+        <span></span><span></span><span></span>
+      </div>
+
+      <!-- Message Input -->
+      <div class="message-input-area">
+        <input type="text" id="message-input" class="message-input"
+               placeholder="Type a message and press Enter…" autocomplete="off"/>
+        <button id="send-btn" onclick="sendMessage()" class="btn-send">Send ➤</button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ─────────────────────── JavaScript ─────────────────────────── -->
+  <script>
+    const socket = io();
+    const username = "{{ username }}";
+    let currentRoom = "General";
+
+    // ── On Connect ──────────────────────────────────────
+    socket.on("connect", () => {
+      switchRoom("General");
+    });
+
+    // ── Switch Room ─────────────────────────────────────
+    function switchRoom(room) {
+      if (room === currentRoom && document.getElementById("messages-container").children.length > 1) return;
+
+      // Leave old room
+      socket.emit("leave", { room: currentRoom });
+
+      currentRoom = room;
+
+      // Update UI room title
+      document.getElementById("current-room-title").textContent = `# ${room}`;
+      document.getElementById("welcome-room-name").textContent = room;
+
+      // Clear messages
+      const container = document.getElementById("messages-container");
+      container.innerHTML = `
+        <div class="chat-welcome" id="chat-welcome">
+          <div class="welcome-icon">👋</div>
+          <p>Welcome to <strong>${room}</strong>!</p>
+          <p class="welcome-sub">Loading messages…</p>
+        </div>`;
+
+      // Highlight active room
+      document.querySelectorAll(".room-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.room === room);
+      });
+
+      // Join new room
+      socket.emit("join", { room });
+
+      // Focus input
+      document.getElementById("message-input").focus();
+    }
+
+    // ── Load History ─────────────────────────────────────
+    socket.on("room_history", (data) => {
+      const container = document.getElementById("messages-container");
+      container.innerHTML = "";
+      if (data.messages.length === 0) {
+        container.innerHTML = `<div class="no-messages">No messages yet. Be the first to say hello! 👋</div>`;
+      } else {
+        data.messages.forEach(msg => appendMessage(msg.username, msg.message, msg.timestamp, false));
+      }
+      scrollToBottom();
+    });
+
+    // ── Receive Message ───────────────────────────────────
+    socket.on("receive_message", (data) => {
+      const welcome = document.getElementById("chat-welcome");
+      if (welcome) welcome.remove();
+      appendMessage(data.username, data.message, data.timestamp, true);
+      scrollToBottom();
+    });
+
+    // ── Status Messages ───────────────────────────────────
+    socket.on("status_message", (data) => {
+      const container = document.getElementById("messages-container");
+      const div = document.createElement("div");
+      div.className = "status-message";
+      div.textContent = data.msg;
+      container.appendChild(div);
+      scrollToBottom();
+    });
+
+    // ── Room Created ──────────────────────────────────────
+    socket.on("room_created", (data) => {
+      addRoomToSidebar(data.room);
+    });
+
+    socket.on("room_exists", (data) => {
+      alert(`Room "${data.room}" already exists!`);
+    });
+
+    // ── Append Message ─────────────────────────────────────
+    function appendMessage(user, message, timestamp, animate) {
+      const container = document.getElementById("messages-container");
+      const isSelf = user === username;
+
+      const wrapper = document.createElement("div");
+      wrapper.className = `message-wrapper ${isSelf ? "self" : "other"}${animate ? " animate-in" : ""}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = `message-bubble ${isSelf ? "self" : "other"}`;
+      bubble.innerHTML = `
+        <div class="message-meta">
+          <span class="msg-user">${isSelf ? "You" : user}</span>
+          <span class="msg-time">${timestamp}</span>
+        </div>
+        <div class="msg-text">${escapeHtml(message)}</div>`;
+
+      wrapper.appendChild(bubble);
+      container.appendChild(wrapper);
+    }
+
+    // ── Send Message ──────────────────────────────────────
+    function sendMessage() {
+      const input = document.getElementById("message-input");
+      const message = input.value.trim();
+      if (!message) return;
+      socket.emit("send_message", { room: currentRoom, message });
+      input.value = "";
+    }
+
+    // Enter key to send
+    document.getElementById("message-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // ── Create Room ───────────────────────────────────────
+    function createRoom() {
+      const input = document.getElementById("new-room-input");
+      const name = input.value.trim();
+      if (!name) return;
+      socket.emit("create_room", { room_name: name });
+      input.value = "";
+    }
+
+    document.getElementById("new-room-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") createRoom();
+    });
+
+    // ── Add Room to Sidebar ───────────────────────────────
+    function addRoomToSidebar(roomName) {
+      const list = document.getElementById("room-list");
+      // Prevent duplicate entries
+      const exists = [...list.querySelectorAll(".room-item")].some(el => el.dataset.room === roomName);
+      if (exists) return;
+
+      const li = document.createElement("li");
+      li.className = "room-item";
+      li.dataset.room = roomName;
+      li.onclick = () => switchRoom(roomName);
+      li.innerHTML = `<span class="room-hash">#</span> ${roomName}`;
+      list.appendChild(li);
+    }
+
+    // ── Helpers ───────────────────────────────────────────
+    function scrollToBottom() {
+      const c = document.getElementById("messages-container");
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+  </script>
+
+</body>
+</html>
