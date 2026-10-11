@@ -14,10 +14,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # ─── App Configuration ────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "oasis_infobyte_chat_secret_key_2024"
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-DB_NAME = "chat_app.db"
+DB_NAME = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_app.db")
 
 # ─── Database Initialization ──────────────────────────────────────────────────
 def init_db():
@@ -226,9 +226,11 @@ def on_create_room(data):
         conn.close()
 
 
+init_db()  # create tables on import, not only when run as a script
+
+
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    init_db()
     print("=" * 55)
     print("  Oasis Infobyte — Task 5: Real-Time Chat Application")
     print("  Author  : Hashir Shoaib")

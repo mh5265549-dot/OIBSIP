@@ -72,14 +72,18 @@ def listen_command():
 
 def get_weather(city="London"):
     """Fetches live weather updates using the OpenWeatherMap API."""
-    # Replace with your free OpenWeatherMap API key
-    api_key = "YOUR_OPENWEATHERMAP_API_KEY"
+    # Set OPENWEATHER_API_KEY in your environment (free key from openweathermap.org)
+    api_key = os.environ.get("OPENWEATHER_API_KEY")
+    if not api_key:
+        return "Weather is not set up yet. Please set the OPENWEATHER_API_KEY environment variable."
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         data = response.json()
-        if data["cod"] != "404":
+        if str(data.get("cod")) == "401":
+            return "The weather API key is invalid."
+        if str(data.get("cod")) == "200":
             main_data = data["main"]
             weather_desc = data["weather"][0]["description"]
             temp = main_data["temp"]
